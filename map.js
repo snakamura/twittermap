@@ -15,8 +15,6 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     if (this.hasTweet(tweet))
         return false;
 
-    $.extend(tweet, Tweet.prototype);
-
     var icon = new google.maps.MarkerImage(tweet.profile_image_url,
                                            new google.maps.Size(48, 48));
     var shadow = new google.maps.MarkerImage('shadow.png',
@@ -221,6 +219,8 @@ Updater.prototype.insertTweets = function() {
         queue.clear();
 
         $.each(response.results, function(n, tweet) {
+            $.extend(tweet, Tweet.prototype);
+
             if (tweet.geo) {
                 queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
             }
