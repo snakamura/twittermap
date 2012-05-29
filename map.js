@@ -210,43 +210,32 @@ Updater.prototype.update = function() {
 };
 
 Updater.prototype.insertTweets = function() {
-    var callback = 'processTweets' + Math.floor(Math.random()*1000);
-    Updater[callback] = $.proxy(function(response) {
-        this.processTweets(response);
-        delete Updater[callback];
-    }, this);
-
     var position = this.map.getCenter();
-    var script = $('<script/>');
-    script.attr('type', 'text/javascript');
-    script.attr('src', 'http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=Updater.' + callback + '');
-    $('body').append(script);
-}
-
-Updater.prototype.processTweets = function(response) {
-    if (response.error) {
-        alert(response.error);
-        return;
-    }
-
     var queue = this.queue;
-    queue.clear();
+    $.getJSON('http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=?', function(response) {
+        if (response.error) {
+            alert(response.error);
+            return;
+        }
 
-    $.each(response.results, function(n, tweet) {
-        if (tweet.geo) {
-            queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
-        }
-        else if (tweet.location) {
-            var geocoder = new google.maps.Geocoder();
-            var request = {
-                address: tweet.location
-            };
-            geocoder.geocode(request, function(result, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                    queue.enqueue(new QueueItem(tweet, result[0].geometry.location));
-                }
-            });
-        }
+        queue.clear();
+
+        $.each(response.results, function(n, tweet) {
+            if (tweet.geo) {
+                queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
+            }
+            else if (tweet.location) {
+                var geocoder = new google.maps.Geocoder();
+                var request = {
+                    address: tweet.location
+                };
+                geocoder.geocode(request, function(result, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        queue.enqueue(new QueueItem(tweet, result[0].geometry.location));
+                    }
+                });
+            }
+        });
     });
 }
 
