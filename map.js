@@ -4,8 +4,11 @@ var INSERT_INTERVAL = 1;
 var Tweets = function(map) {
     this.map = map;
     this.tweets = {};
+    this.tweetIds = [];
     this.infoWindow = null;
 };
+
+Tweets.MAX_TWEETS = 100;
 
 Tweets.prototype.hasTweet = function(tweet) {
     return tweet.id in this.tweets;
@@ -28,46 +31,61 @@ Tweets.prototype.insertTweet = function(tweet, position) {
         icon: icon,
         shadow: shadow
     });
-    tweet.marker = marker;
 
-    var t = tweet.createElement();
-    t.hide();
-    t.mouseenter(function(event) {
+    var element = tweet.createElement();
+    element.hide();
+    element.mouseenter(function(event) {
         marker.setAnimation(google.maps.Animation.BOUNCE);
     });
-    t.mouseleave(function(event) {
+    element.mouseleave(function(event) {
         marker.setAnimation(null);
     });
-    t.click($.proxy(function(event) {
+    element.click($.proxy(function(event) {
         var position = marker.getPosition();
         if (!this.map.getBounds().contains(position))
             map.setCenter(position);
     }, this));
 
-    $('#tweets').prepend(t);
-    t.animate({
+    $('#tweets').prepend(element);
+    element.animate({
         height: 'show'
     });
 
     google.maps.event.addListener(marker, 'mouseover', function(event) {
-        t.addClass('highlighted');
+        element.addClass('highlighted');
     });
     google.maps.event.addListener(marker, 'mouseout', function(event) {
-        t.removeClass('highlighted');
+        element.removeClass('highlighted');
     });
     google.maps.event.addListener(marker, 'click', $.proxy(function(event) {
         this.showTweet(tweet);
 
         var sidebar = $('#sidebar');
         sidebar.animate({
-            'scrollTop': (sidebar.scrollTop() + t.position().top - 20) + 'px'
+            'scrollTop': (sidebar.scrollTop() + element.position().top - 20) + 'px'
         }, 'fast');
     }, this));
 
+    tweet.marker = marker;
+    tweet.element = element;
+
     this.tweets[tweet.id] = tweet;
+    this.tweetIds.push(tweet.id);
+
+    this.crop();
 
     return true;
 };
+
+Tweets.prototype.crop = function() {
+    while (this.tweetIds.length > Tweets.MAX_TWEETS) {
+        var id = this.tweetIds.shift();
+        var tweet = this.tweets[id];
+        tweet.marker.setMap(null);
+        tweet.element.remove();
+        delete this.tweets[id];
+    }
+}
 
 Tweets.prototype.showTweet = function(tweet) {
     if (this.infoWindow)
