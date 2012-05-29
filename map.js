@@ -5,6 +5,33 @@ var updateTimer = null;
 var lastUpdated = null;
 
 var UPDATE_INTERVAL = 10;
+var INSERT_INTERVAL = 1;
+
+
+var Queue = function() {
+    this.items = [];
+};
+
+Queue.prototype.enqueue = function(item) {
+    this.items.unshift(item);
+};
+
+Queue.prototype.dequeue = function() {
+    return this.items.length == 0 ? null : this.items.shift();
+};
+
+Queue.prototype.clear = function() {
+    this.items.length = 0;
+};
+
+var queue = new Queue();
+
+
+var QueueItem = function(tweet, position) {
+    this.tweet = tweet;
+    this.position = position;
+};
+
 
 $(function() {
     var options = {
@@ -21,6 +48,12 @@ $(function() {
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
         update();
     });
+
+    setInterval(function() {
+        var item = queue.dequeue();
+        if (item)
+            insertTweet(item.tweet, item.position);
+    }, INSERT_INTERVAL*1000);
 });
 
 function update() {
@@ -199,9 +232,11 @@ function processTweets(response) {
         return;
     }
 
+    queue.clear();
+
     $.each(response.results, function(n, tweet) {
         if (tweet.geo) {
-            insertTweet(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1]));
+            queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
         }
         else if (tweet.location) {
             var geocoder = new google.maps.Geocoder();
@@ -210,7 +245,7 @@ function processTweets(response) {
             };
             geocoder.geocode(request, function(result, status) {
                 if (status == google.maps.GeocoderStatus.OK) {
-                    insertTweet(tweet, result[0].geometry.location);
+                    queue.enqueue(new QueueItem(tweet, result[0].geometry.location));
                 }
             });
         }
