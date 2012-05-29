@@ -1,6 +1,10 @@
-var map;
-var infoWindow;
+var map = null;
+var infoWindow = null;
 var tweets = {};
+var updateTimer = null;
+var lastUpdated = null;
+
+var UPDATE_INTERVAL = 10;
 
 $(function() {
     var options = {
@@ -15,9 +19,33 @@ $(function() {
     });
 
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
-        insertTweets();
+        update();
     });
 });
+
+function update() {
+    if (!updateTimer) {
+        var now = new Date();
+        if (!lastUpdated) {
+            insertTweets();
+            lastUpdated = now;
+        }
+        else {
+            var diff = now.getTime() - lastUpdated.getTime();
+            if (diff > UPDATE_INTERVAL) {
+                insertTweets();
+                lastUpdated = now;
+            }
+            else {
+                updateTimer = setTimeout(function() {
+                    updateTimer = null;
+                    insertTweets();
+                    lastUpdated = new Date();
+                }, (UPDATE_INTERVAL - diff)*1000);
+            }
+        }
+    }
+}
 
 function insertTweets() {
     var position = map.getCenter();
