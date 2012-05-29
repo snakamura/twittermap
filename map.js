@@ -1,11 +1,78 @@
 var map = null;
 var infoWindow = null;
-var tweets = {};
+var tweets = null;
 var updateTimer = null;
 var lastUpdated = null;
 
 var UPDATE_INTERVAL = 10;
 var INSERT_INTERVAL = 1;
+
+
+var Tweets = function(map) {
+    this.map = map;
+    this.tweets = {};
+};
+
+Tweets.prototype.hasTweet = function(tweet) {
+    return tweet.id in this.tweets;
+};
+
+Tweets.prototype.insertTweet = function(tweet, position) {
+    if (this.hasTweet(tweet))
+        return false;
+
+    var icon = new google.maps.MarkerImage(tweet.profile_image_url,
+                                           new google.maps.Size(48, 48));
+    var shadow = new google.maps.MarkerImage('shadow.png',
+                                             new google.maps.Size(64, 64),
+                                             new google.maps.Point(0, 0),
+                                             new google.maps.Point(24, 48));
+    var marker = new google.maps.Marker({
+        map: this.map,
+        position: position,
+        title: tweet.text,
+        icon: icon,
+        shadow: shadow
+    });
+
+    var t = createTweetElement(tweet);
+    t.hide();
+    t.mouseenter(function(event) {
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+    });
+    t.mouseleave(function(event) {
+        marker.setAnimation(null);
+    });
+    t.click(function(event) {
+        var position = marker.getPosition();
+        if (!map.getBounds().contains(position))
+            map.setCenter(position);
+    });
+
+    $('#tweets').prepend(t);
+    t.animate({
+        height: 'show'
+    });
+
+    google.maps.event.addListener(marker, 'mouseover', function(event) {
+        t.addClass('highlighted');
+    });
+    google.maps.event.addListener(marker, 'mouseout', function(event) {
+        t.removeClass('highlighted');
+    });
+    google.maps.event.addListener(marker, 'click', function(event) {
+        showTweet(tweet, marker);
+
+        var sidebar = $('#sidebar');
+        sidebar.animate({
+            'scrollTop': (sidebar.scrollTop() + t.position().top - 20) + 'px'
+        }, 'fast');
+    });
+
+    this.tweets[tweet.id] = tweet;
+
+    return true;
+}
 
 
 var Queue = function() {
@@ -49,10 +116,14 @@ $(function() {
         update();
     });
 
+    tweets = new Tweets(map);
+
     setInterval(function() {
-        var item = queue.dequeue();
-        if (item)
-            insertTweet(item.tweet, item.position);
+        while (true) {
+            var item = queue.dequeue();
+            if (!item || tweets.insertTweet(item.tweet, item.position))
+                break;
+        }
     }, INSERT_INTERVAL*1000);
 });
 
@@ -86,61 +157,6 @@ function insertTweets() {
     script.attr('type', 'text/javascript');
     script.attr('src', 'http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=processTweets');
     $('body').append(script);
-}
-
-function insertTweet(tweet, position) {
-    if (tweets[tweet.id])
-        return;
-
-    var icon = new google.maps.MarkerImage(tweet.profile_image_url,
-                                           new google.maps.Size(48, 48));
-    var shadow = new google.maps.MarkerImage('shadow.png',
-                                             new google.maps.Size(64, 64),
-                                             new google.maps.Point(0, 0),
-                                             new google.maps.Point(24, 48));
-    var marker = new google.maps.Marker({
-        map: map,
-        position: position,
-        title: tweet.text,
-        icon: icon,
-        shadow: shadow
-    });
-
-    var t = createTweetElement(tweet);
-    t.hide();
-    t.mouseenter(function(event) {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-    });
-    t.mouseleave(function(event) {
-        marker.setAnimation(null);
-    });
-    t.click(function(event) {
-        var position = marker.getPosition();
-        if (!map.getBounds().contains(position))
-            map.setCenter(position);
-    });
-
-    $('#tweets').prepend(t);
-    t.animate({
-        height: 'show'
-    });
-
-    google.maps.event.addListener(marker, 'mouseover', function(event) {
-        t.addClass('highlighted');
-    });
-    google.maps.event.addListener(marker, 'mouseout', function(event) {
-        t.removeClass('highlighted');
-    });
-    google.maps.event.addListener(marker, 'click', function(event) {
-        showTweet(tweet, marker);
-
-        var sidebar = $('#sidebar');
-        sidebar.animate({
-            'scrollTop': (sidebar.scrollTop() + t.position().top - 20) + 'px'
-        }, 'fast');
-    });
-
-    tweets[tweet.id] = tweet;
 }
 
 function createTweetElement(tweet) {
