@@ -1,12 +1,10 @@
-var map = null;
-var infoWindow = null;
-
 var INSERT_INTERVAL = 1;
 
 
 var Tweets = function(map) {
     this.map = map;
     this.tweets = {};
+    this.infoWindow = null;
 };
 
 Tweets.prototype.hasTweet = function(tweet) {
@@ -16,6 +14,8 @@ Tweets.prototype.hasTweet = function(tweet) {
 Tweets.prototype.insertTweet = function(tweet, position) {
     if (this.hasTweet(tweet))
         return false;
+
+    $.extend(tweet, Tweet.prototype);
 
     var icon = new google.maps.MarkerImage(tweet.profile_image_url,
                                            new google.maps.Size(48, 48));
@@ -30,8 +30,9 @@ Tweets.prototype.insertTweet = function(tweet, position) {
         icon: icon,
         shadow: shadow
     });
+    tweet.marker = marker;
 
-    var t = createTweetElement(tweet);
+    var t = tweet.createElement();
     t.hide();
     t.mouseenter(function(event) {
         marker.setAnimation(google.maps.Animation.BOUNCE);
@@ -39,11 +40,11 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     t.mouseleave(function(event) {
         marker.setAnimation(null);
     });
-    t.click(function(event) {
+    t.click($.proxy(function(event) {
         var position = marker.getPosition();
-        if (!map.getBounds().contains(position))
+        if (!this.map.getBounds().contains(position))
             map.setCenter(position);
-    });
+    }, this));
 
     $('#tweets').prepend(t);
     t.animate({
@@ -56,18 +57,105 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     google.maps.event.addListener(marker, 'mouseout', function(event) {
         t.removeClass('highlighted');
     });
-    google.maps.event.addListener(marker, 'click', function(event) {
-        showTweet(tweet, marker);
+    google.maps.event.addListener(marker, 'click', $.proxy(function(event) {
+        this.showTweet(tweet);
 
         var sidebar = $('#sidebar');
         sidebar.animate({
             'scrollTop': (sidebar.scrollTop() + t.position().top - 20) + 'px'
         }, 'fast');
-    });
+    }, this));
 
     this.tweets[tweet.id] = tweet;
 
     return true;
+};
+
+Tweets.prototype.showTweet = function(tweet) {
+    if (this.infoWindow)
+        this.infoWindow.close();
+
+    var options = {
+        content: tweet.createElement(tweet)[0],
+        maxWidth: 320
+    };
+    this.infoWindow = new google.maps.InfoWindow(options);
+    this.infoWindow.open(this.map, tweet.marker);
+};
+
+
+var Tweet = function() {
+};
+
+Tweet.prototype.createElement = function() {
+    var t = $('<div class="tweet"><img class="profile"/><div><a class="username"/> <a class="user"/></div><div class="text"/></div>');
+    t.children('img.profile').attr('src', this.profile_image_url);
+    var links = [t.find('a.username').text(this.from_user_name),
+                 t.find('a.user').text(this.from_user)];
+    $.each(links, function(n, l) {
+        l.attr('href', 'http://twitter.com/#!' + this.from_user).attr('target', '_blank');
+    });
+    t.children('div.text').html(this.format());
+    if (this.entities.media) {
+        $.each(this.entities.media, function(n, media) {
+            var thumb = $('<img class="thumb"/>');
+            thumb.attr('src', media.media_url + ':thumb');
+            thumb.css('width', media.sizes.thumb.w + 'px');
+            thumb.css('height', media.sizes.thumb.h + 'px');
+            t.append(thumb);
+        });
+    }
+    return t;
+}
+
+Tweet.prototype.format = function() {
+    var escape = function(t) {
+        // TODO
+        // This method doesn't escape '"'.
+        return $('<div/>').text(t).html();
+    };
+
+    var URL = 0;
+    var USER_MENTION = 1;
+    var HASHTAG = 2;
+
+    var types = [{ type: URL,          entities: this.entities.urls          },
+                 { type: USER_MENTION, entities: this.entities.user_mentions },
+                 { type: HASHTAG,      entities: this.entities.hashtags      }];
+    var entities = [];
+    $.each(types, function(n, t) {
+        if (t.entities) {
+            $.each(t.entities, function(n, e) {
+                e.type = t.type;
+            });
+            entities = entities.concat(t.entities);
+        }
+    });
+    entities.sort(function(e1, e2) {
+        return e1.indices[0] - e2.indices[0];
+    });
+
+    var formatted = '';
+    var text = this.text;
+    var current = 0;
+    $.each(entities, function(n, e) {
+        var start = e.indices[0];
+        formatted += escape(text.substring(current, start));
+        switch (e.type) {
+        case URL:
+            formatted += '<a href="' + escape(e.url) + '" target="_blank">' + escape(e.display_url) + '</a>';
+            break;
+        case USER_MENTION:
+            formatted += '<a href="http://twitter.com/#!' + escape(encodeURIComponent(e.screen_name)) + '" title="' + escape(e.name) + '" target="_blank">@' + escape(e.screen_name) + '</a>';
+            break;
+        case HASHTAG:
+            formatted += '<a href="http://twitter.com/#!search/' + escape(encodeURIComponent('#' + e.text)) + '" target="_blank">#' + escape(e.text) + '</a>';
+            break;
+        }
+        current = e.indices[1];
+    });
+    formatted += escape(text.substring(current));
+    return formatted;
 }
 
 
@@ -94,7 +182,8 @@ var QueueItem = function(tweet, position) {
 };
 
 
-var Updater = function(queue) {
+var Updater = function(map, queue) {
+    this.map = map;
     this.queue = queue;
     this.timer = null;
     this.lastUpdated = new Date(new Date().getTime() - Updater.INTERVAL);
@@ -127,7 +216,7 @@ Updater.prototype.insertTweets = function() {
         delete Updater[callback];
     }, this);
 
-    var position = map.getCenter();
+    var position = this.map.getCenter();
     var script = $('<script/>');
     script.attr('type', 'text/javascript');
     script.attr('src', 'http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=Updater.' + callback + '');
@@ -168,14 +257,14 @@ $(function() {
         zoom: 16,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
-    map = new google.maps.Map($('#map')[0], options);
+    var map = new google.maps.Map($('#map')[0], options);
 
     navigator.geolocation.getCurrentPosition(function(position) {
         map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
     });
 
     var queue = new Queue();
-    var updater = new Updater(queue);
+    var updater = new Updater(map, queue);
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
         updater.update();
     });
@@ -190,86 +279,3 @@ $(function() {
         }
     }, INSERT_INTERVAL*1000);
 });
-
-function createTweetElement(tweet) {
-    var t = $('<div class="tweet"><img class="profile"/><div><a class="username"/> <a class="user"/></div><div class="text"/></div>');
-    t.children('img.profile').attr('src', tweet.profile_image_url);
-    var links = [t.find('a.username').text(tweet.from_user_name),
-                 t.find('a.user').text(tweet.from_user)];
-    $.each(links, function(n, l) {
-        l.attr('href', 'http://twitter.com/#!' + tweet.from_user).attr('target', '_blank');
-    });
-    t.children('div.text').html(formatTweet(tweet));
-    if (tweet.entities.media) {
-        $.each(tweet.entities.media, function(n, media) {
-            var thumb = $('<img class="thumb"/>');
-            thumb.attr('src', media.media_url + ':thumb');
-            thumb.css('width', media.sizes.thumb.w + 'px');
-            thumb.css('height', media.sizes.thumb.h + 'px');
-            t.append(thumb);
-        });
-    }
-    return t;
-}
-
-function formatTweet(tweet) {
-    var escape = function(t) {
-        // TODO
-        // This method doesn't escape '"'.
-        return $('<div/>').text(t).html();
-    };
-
-    var URL = 0;
-    var USER_MENTION = 1;
-    var HASHTAG = 2;
-
-    var types = [{ type: URL,          entities: tweet.entities.urls          },
-                 { type: USER_MENTION, entities: tweet.entities.user_mentions },
-                 { type: HASHTAG,      entities: tweet.entities.hashtags      }];
-    var entities = [];
-    $.each(types, function(n, t) {
-        if (t.entities) {
-            $.each(t.entities, function(n, e) {
-                e.type = t.type;
-            });
-            entities = entities.concat(t.entities);
-        }
-    });
-    entities.sort(function(e1, e2) {
-        return e1.indices[0] - e2.indices[0];
-    });
-
-    var formatted = '';
-    var text = tweet.text;
-    var current = 0;
-    $.each(entities, function(n, e) {
-        var start = e.indices[0];
-        formatted += escape(text.substring(current, start));
-        switch (e.type) {
-        case URL:
-            formatted += '<a href="' + escape(e.url) + '" target="_blank">' + escape(e.display_url) + '</a>';
-            break;
-        case USER_MENTION:
-            formatted += '<a href="http://twitter.com/#!' + escape(encodeURIComponent(e.screen_name)) + '" title="' + escape(e.name) + '" target="_blank">@' + escape(e.screen_name) + '</a>';
-            break;
-        case HASHTAG:
-            formatted += '<a href="http://twitter.com/#!search/' + escape(encodeURIComponent('#' + e.text)) + '" target="_blank">#' + escape(e.text) + '</a>';
-            break;
-        }
-        current = e.indices[1];
-    });
-    formatted += escape(text.substring(current));
-    return formatted;
-}
-
-function showTweet(tweet, marker) {
-    if (infoWindow)
-        infoWindow.close();
-
-    var options = {
-        content: createTweetElement(tweet)[0],
-        maxWidth: 320
-    };
-    infoWindow = new google.maps.InfoWindow(options);
-    infoWindow.open(map, marker);
-}
