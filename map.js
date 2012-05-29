@@ -1,10 +1,6 @@
 var map = null;
 var infoWindow = null;
-var tweets = null;
-var updateTimer = null;
-var lastUpdated = null;
 
-var UPDATE_INTERVAL = 10;
 var INSERT_INTERVAL = 1;
 
 
@@ -91,13 +87,79 @@ Queue.prototype.clear = function() {
     this.items.length = 0;
 };
 
-var queue = new Queue();
-
 
 var QueueItem = function(tweet, position) {
     this.tweet = tweet;
     this.position = position;
 };
+
+
+var Updater = function(queue) {
+    this.queue = queue;
+    this.timer = null;
+    this.lastUpdated = new Date(new Date().getTime() - Updater.INTERVAL);
+};
+
+Updater.INTERVAL = 10;
+
+Updater.prototype.update = function() {
+    if (!this.timer) {
+        var now = new Date();
+        var diff = now.getTime() - this.lastUpdated.getTime();
+        if (diff > Updater.INTERVAL) {
+            this.insertTweets();
+            this.lastUpdated = now;
+        }
+        else {
+            this.timer = setTimeout($.proxy(function() {
+                this.timer = null;
+                this.insertTweets();
+                this.lastUpdated = new Date();
+            }, this), (Updater.INTERVAL - diff)*1000);
+        }
+    }
+};
+
+Updater.prototype.insertTweets = function() {
+    var callback = 'processTweets' + Math.floor(Math.random()*1000);
+    Updater[callback] = $.proxy(function(response) {
+        this.processTweets(response);
+        delete Updater[callback];
+    }, this);
+
+    var position = map.getCenter();
+    var script = $('<script/>');
+    script.attr('type', 'text/javascript');
+    script.attr('src', 'http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=Updater.' + callback + '');
+    $('body').append(script);
+}
+
+Updater.prototype.processTweets = function(response) {
+    if (response.error) {
+        alert(response.error);
+        return;
+    }
+
+    var queue = this.queue;
+    queue.clear();
+
+    $.each(response.results, function(n, tweet) {
+        if (tweet.geo) {
+            queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
+        }
+        else if (tweet.location) {
+            var geocoder = new google.maps.Geocoder();
+            var request = {
+                address: tweet.location
+            };
+            geocoder.geocode(request, function(result, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    queue.enqueue(new QueueItem(tweet, result[0].geometry.location));
+                }
+            });
+        }
+    });
+}
 
 
 $(function() {
@@ -112,11 +174,13 @@ $(function() {
         map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
     });
 
+    var queue = new Queue();
+    var updater = new Updater(queue);
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
-        update();
+        updater.update();
     });
 
-    tweets = new Tweets(map);
+    var tweets = new Tweets(map);
 
     setInterval(function() {
         while (true) {
@@ -126,38 +190,6 @@ $(function() {
         }
     }, INSERT_INTERVAL*1000);
 });
-
-function update() {
-    if (!updateTimer) {
-        var now = new Date();
-        if (!lastUpdated) {
-            insertTweets();
-            lastUpdated = now;
-        }
-        else {
-            var diff = now.getTime() - lastUpdated.getTime();
-            if (diff > UPDATE_INTERVAL) {
-                insertTweets();
-                lastUpdated = now;
-            }
-            else {
-                updateTimer = setTimeout(function() {
-                    updateTimer = null;
-                    insertTweets();
-                    lastUpdated = new Date();
-                }, (UPDATE_INTERVAL - diff)*1000);
-            }
-        }
-    }
-}
-
-function insertTweets() {
-    var position = map.getCenter();
-    var script = $('<script/>');
-    script.attr('type', 'text/javascript');
-    script.attr('src', 'http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=processTweets');
-    $('body').append(script);
-}
 
 function createTweetElement(tweet) {
     var t = $('<div class="tweet"><img class="profile"/><div><a class="username"/> <a class="user"/></div><div class="text"/></div>');
@@ -240,30 +272,4 @@ function showTweet(tweet, marker) {
     };
     infoWindow = new google.maps.InfoWindow(options);
     infoWindow.open(map, marker);
-}
-
-function processTweets(response) {
-    if (response.error) {
-        alert(response.error);
-        return;
-    }
-
-    queue.clear();
-
-    $.each(response.results, function(n, tweet) {
-        if (tweet.geo) {
-            queue.enqueue(new QueueItem(tweet, new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1])));
-        }
-        else if (tweet.location) {
-            var geocoder = new google.maps.Geocoder();
-            var request = {
-                address: tweet.location
-            };
-            geocoder.geocode(request, function(result, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                    queue.enqueue(new QueueItem(tweet, result[0].geometry.location));
-                }
-            });
-        }
-    });
 }
