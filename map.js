@@ -108,9 +108,9 @@ Tweet.prototype.createElement = function() {
     t.children('img.profile').attr('src', this.profile_image_url);
     var links = [t.find('a.username').text(this.from_user_name),
                  t.find('a.user').text(this.from_user)];
-    $.each(links, function(n, l) {
+    $.each(links, $.proxy(function(n, l) {
         l.attr('href', 'http://twitter.com/#!' + this.from_user).attr('target', '_blank');
-    });
+    },this));
     t.children('div.text').html(this.format());
     if (this.entities.media) {
         $.each(this.entities.media, function(n, media) {
