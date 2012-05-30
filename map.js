@@ -1,5 +1,5 @@
-var INSERT_INTERVAL = 1;
-var UPDATE_INTERVAL = 60;
+var INSERT_INTERVAL = 1*1000;
+var UPDATE_INTERVAL = 60*1000;
 
 
 var Tweets = function(map) {
@@ -283,7 +283,7 @@ $(function() {
     });
     setInterval(function() {
         updater.update();
-    }, UPDATE_INTERVAL*1000)
+    }, UPDATE_INTERVAL)
 
     var tweets = new Tweets(map);
 
@@ -293,5 +293,5 @@ $(function() {
             if (!item || tweets.insertTweet(item.tweet, item.position))
                 break;
         }
-    }, INSERT_INTERVAL*1000);
+    }, INSERT_INTERVAL);
 });
