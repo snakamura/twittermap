@@ -227,9 +227,10 @@ Updater.prototype.update = function() {
 };
 
 Updater.prototype.insertTweets = function() {
+    var since = new Date(new Date().getTime() - 24*60*60*1000);
     var position = this.map.getCenter();
     var queue = this.queue;
-    $.getJSON('http://search.twitter.com/search.json?geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=?', function(response) {
+    $.getJSON('http://search.twitter.com/search.json?q=since:' + Updater.formatUTCDate(since) + '&geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=?', function(response) {
         if (response.error) {
             alert(response.error);
             return;
@@ -256,7 +257,11 @@ Updater.prototype.insertTweets = function() {
             }
         });
     });
-}
+};
+
+Updater.formatUTCDate = function(date) {
+    return date.getUTCFullYear() + '-' + (date.getUTCMonth() + 1) + '-' + date.getUTCDate();
+};
 
 
 $(function() {
