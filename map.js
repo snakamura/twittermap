@@ -145,10 +145,12 @@ Tweet.prototype.format = function() {
     var URL = 0;
     var USER_MENTION = 1;
     var HASHTAG = 2;
+    var MEDIA = 3;
 
     var types = [{ type: URL,          entities: this.entities.urls          },
                  { type: USER_MENTION, entities: this.entities.user_mentions },
-                 { type: HASHTAG,      entities: this.entities.hashtags      }];
+                 { type: HASHTAG,      entities: this.entities.hashtags      },
+                 { type: MEDIA,        entities: this.entities.media         }];
     var entities = [];
     $.each(types, function(n, t) {
         if (t.entities) {
@@ -170,6 +172,7 @@ Tweet.prototype.format = function() {
         formatted += escape(text.substring(current, start));
         switch (e.type) {
         case URL:
+        case MEDIA:
             formatted += '<a href="' + escape(e.url) + '" target="_blank">' + escape(e.display_url) + '</a>';
             break;
         case USER_MENTION:
