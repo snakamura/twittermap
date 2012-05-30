@@ -1,7 +1,3 @@
-var INSERT_INTERVAL = 1*1000;
-var UPDATE_INTERVAL = 60*1000;
-
-
 var Tweets = function(map) {
     this.map = map;
     this.tweets = {};
@@ -10,6 +6,13 @@ var Tweets = function(map) {
 };
 
 Tweets.MAX_TWEETS = 100;
+
+Tweets.prototype.each = function(f) {
+    var tweets = this.tweets;
+    $.each(tweets, function(id) {
+        f(tweets[id]);
+    });
+};
 
 Tweets.prototype.hasTweet = function(tweet) {
     return tweet.id in this.tweets;
@@ -107,7 +110,7 @@ var Tweet = function() {
 Tweet.prototype.createElement = function() {
     var t = $('<div class="tweet"><img class="profile"/><div class="created"/><div><a class="username"/> <a class="user"/></div><div class="text"/></div>');
     t.children('img.profile').attr('src', this.profile_image_url);
-    t.children('div.created').text(Tweet.formatDate(new Date(this.created_at)));
+    this.applyCreated(t);
     var links = [t.find('a.username').text(this.from_user_name),
                  t.find('a.user').text(this.from_user)];
     $.each(links, $.proxy(function(n, l) {
@@ -124,7 +127,15 @@ Tweet.prototype.createElement = function() {
         });
     }
     return t;
-}
+};
+
+Tweet.prototype.updateCreated = function(now) {
+    this.applyCreated(this.element, now);
+};
+
+Tweet.prototype.applyCreated = function(element, now) {
+    element.children('div.created').text(Tweet.formatDate(new Date(this.created_at), now));
+};
 
 Tweet.prototype.format = function() {
     var escape = function(t) {
@@ -176,8 +187,10 @@ Tweet.prototype.format = function() {
     return formatted;
 };
 
-Tweet.formatDate = function(date) {
-    var diff = (new Date().getTime() - date.getTime())/1000;
+Tweet.formatDate = function(date, now) {
+    if (!now)
+        now = new Date();
+    var diff = (now.getTime() - date.getTime())/1000;
     if (diff < 60)
         return Math.floor(diff) + 's';
     else if (diff < 60*60)
@@ -277,6 +290,10 @@ Updater.formatUTCDate = function(date) {
 };
 
 
+var INSERT_INTERVAL = 1*1000;
+var UPDATE_INTERVAL = 60*1000;
+var UPDATE_CREATED_INTERVAL = 60*1000;
+
 $(function() {
     var options = {
         center: new google.maps.LatLng(35.607103, 139.734893),
@@ -307,4 +324,11 @@ $(function() {
                 break;
         }
     }, INSERT_INTERVAL);
+
+    setInterval(function() {
+        var now = new Date();
+        tweets.each(function(tweet) {
+            tweet.updateCreated(now);
+        });
+    }, UPDATE_CREATED_INTERVAL);
 });
