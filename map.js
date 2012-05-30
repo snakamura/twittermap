@@ -43,7 +43,7 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     element.click($.proxy(function(event) {
         var position = marker.getPosition();
         if (!this.map.getBounds().contains(position))
-            map.setCenter(position);
+            this.map.setCenter(position);
     }, this));
 
     $('#tweets').prepend(element);
