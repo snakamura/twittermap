@@ -37,7 +37,6 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     });
 
     var element = tweet.createElement();
-    element.hide();
     element.mouseenter(function(event) {
         marker.setAnimation(google.maps.Animation.BOUNCE);
     });
@@ -51,7 +50,16 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     }, this));
 
     $('#tweets').prepend(element);
-    element.show('blind', { mode: 'show' }, 'slow');
+
+    var sidebar = $('#sidebar');
+    var scrollTop = sidebar.scrollTop();
+    if (scrollTop == 0) {
+        element.hide();
+        element.show('blind', { mode: 'show' }, 'slow');
+    }
+    else {
+        sidebar.scrollTop(scrollTop + element.outerHeight(true) + 1);
+    }
 
     google.maps.event.addListener(marker, 'mouseover', function(event) {
         element.addClass('highlighted');
