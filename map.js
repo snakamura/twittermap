@@ -321,6 +321,7 @@ Updater.formatUTCDate = function(date) {
 var INSERT_INTERVAL = 1*1000;
 var UPDATE_INTERVAL = 60*1000;
 var UPDATE_CREATED_INTERVAL = 60*1000;
+var UPDATE_DELAY = 1*1000;
 
 $(function() {
     var options = {
@@ -336,9 +337,17 @@ $(function() {
 
     var queue = new Queue();
     var updater = new Updater(map, queue);
+
+    var timer = null;
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
-        updater.update();
+        if (timer != null)
+            clearTimeout(timer);
+        timer = setTimeout(function() {
+            timer = null;
+            updater.update();
+        }, UPDATE_DELAY);
     });
+
     setInterval(function() {
         updater.update();
     }, UPDATE_INTERVAL)
