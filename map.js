@@ -117,10 +117,12 @@ Tweet.prototype.createElement = function() {
     t.children('div.text').html(this.format());
     if (this.entities.media) {
         $.each(this.entities.media, function(n, media) {
-            var thumb = $('<img class="thumb"/>');
-            thumb.attr('src', media.media_url + ':thumb');
-            thumb.css('width', media.sizes.thumb.w + 'px');
-            thumb.css('height', media.sizes.thumb.h + 'px');
+            var thumb = $('<a target="blank"><img class="thumb"/></a>');
+            thumb.attr('href', media.url);
+            var img = thumb.children('img');
+            img.attr('src', media.media_url + ':thumb');
+            img.css('width', media.sizes.thumb.w + 'px');
+            img.css('height', media.sizes.thumb.h + 'px');
             t.append(thumb);
         });
     }
