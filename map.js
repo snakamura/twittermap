@@ -1,4 +1,5 @@
 var INSERT_INTERVAL = 1;
+var UPDATE_INTERVAL = 60;
 
 
 var Tweets = function(map) {
@@ -275,6 +276,9 @@ $(function() {
     google.maps.event.addListener(map, 'bounds_changed', function(event) {
         updater.update();
     });
+    setInterval(function() {
+        updater.update();
+    }, UPDATE_INTERVAL*1000)
 
     var tweets = new Tweets(map);
 
