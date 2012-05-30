@@ -243,7 +243,7 @@ var Updater = function(map, queue) {
     this.queue = queue;
     this.timer = null;
     this.lastUpdated = new Date(new Date().getTime() - Updater.INTERVAL);
-    this.lastPosition = null;
+    this.lastBounds = null;
     this.refreshUrl = null;
 };
 
@@ -268,15 +268,16 @@ Updater.prototype.update = function() {
 };
 
 Updater.prototype.updateTweets = function() {
-    var center = this.map.getCenter();
-    var position = new google.maps.LatLng(center.lat(), center.lng());
+    var bounds = this.map.getBounds();
+    var position = this.getPosition();
+    var radius = this.getRadius();
     var url = 'http://search.twitter.com/search.json';
-    if (this.lastPosition && position.equals(this.lastPosition)) {
+    if (this.lastBounds && bounds.equals(this.lastBounds)) {
         url += this.refreshUrl;
     }
     else {
         var since = new Date(new Date().getTime() - 24*60*60*1000);
-        url += '?q=since:' + encodeURIComponent(Updater.formatUTCDate(since)) + '&geocode=' + encodeURIComponent(position.toUrlValue()) + ',1km&rpp=100&include_entities=t&result_type=recent';
+        url += '?q=since:' + encodeURIComponent(Updater.formatUTCDate(since)) + '&geocode=' + encodeURIComponent(position.toUrlValue()) + ',' + radius + '&rpp=100&include_entities=t&result_type=recent';
     }
     url += '&callback=?';
 
@@ -308,9 +309,22 @@ Updater.prototype.updateTweets = function() {
             }
         });
 
-        this.lastPosition = position;
+        this.lastbounds = bounds;
         this.refreshUrl = response.refresh_url;
     }, this));
+};
+
+Updater.prototype.getPosition = function() {
+    var center = this.map.getCenter();
+    return new google.maps.LatLng(center.lat(), center.lng());
+};
+
+Updater.prototype.getRadius = function() {
+    var center = this.map.getCenter();
+    var bounds = this.map.getBounds();
+    var span = bounds.toSpan();
+    var r = 6400;
+    return Math.max(Math.ceil(r*2*Math.PI/360*span.lat()/2), Math.ceil(r*Math.cos(center.lat()/180*Math.PI)*2*Math.PI/360*span.lng()/2)) + 'km';
 };
 
 Updater.formatUTCDate = function(date) {
