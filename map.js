@@ -243,6 +243,8 @@ var Updater = function(map, queue) {
     this.queue = queue;
     this.timer = null;
     this.lastUpdated = new Date(new Date().getTime() - Updater.INTERVAL);
+    this.lastPosition = null;
+    this.refreshUrl = null;
 };
 
 Updater.INTERVAL = 10;
@@ -252,30 +254,39 @@ Updater.prototype.update = function() {
         var now = new Date();
         var diff = now.getTime() - this.lastUpdated.getTime();
         if (diff > Updater.INTERVAL) {
-            this.insertTweets();
+            this.updateTweets();
             this.lastUpdated = now;
         }
         else {
             this.timer = setTimeout($.proxy(function() {
                 this.timer = null;
-                this.insertTweets();
+                this.updateTweets();
                 this.lastUpdated = new Date();
             }, this), (Updater.INTERVAL - diff)*1000);
         }
     }
 };
 
-Updater.prototype.insertTweets = function() {
-    var since = new Date(new Date().getTime() - 24*60*60*1000);
+Updater.prototype.updateTweets = function() {
     var center = this.map.getCenter();
     var position = new google.maps.LatLng(center.lat(), center.lng());
-    var queue = this.queue;
-    $.getJSON('http://search.twitter.com/search.json?q=since:' + Updater.formatUTCDate(since) + '&geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=?', function(response) {
+    var url = 'http://search.twitter.com/search.json';
+    if (this.lastPosition && position.equals(this.lastPosition)) {
+        url += this.refreshUrl;
+    }
+    else {
+        var since = new Date(new Date().getTime() - 24*60*60*1000);
+        url += '?q=since:' + encodeURIComponent(Updater.formatUTCDate(since)) + '&geocode=' + encodeURIComponent(position.toUrlValue()) + ',1km&rpp=100&include_entities=t&result_type=recent';
+    }
+    url += '&callback=?';
+
+    $.getJSON(url, $.proxy(function(response) {
         if (response.error) {
             alert(response.error);
             return;
         }
 
+        var queue = this.queue;
         queue.clear();
 
         $.each(response.results, function(n, tweet) {
@@ -296,7 +307,10 @@ Updater.prototype.insertTweets = function() {
                 });
             }
         });
-    });
+
+        this.lastPosition = position;
+        this.refreshUrl = response.refresh_url;
+    }, this));
 };
 
 Updater.formatUTCDate = function(date) {
