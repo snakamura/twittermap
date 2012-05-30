@@ -51,9 +51,7 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     }, this));
 
     $('#tweets').prepend(element);
-    element.animate({
-        height: 'show'
-    });
+    element.show('blind', { mode: 'show' }, 'slow');
 
     google.maps.event.addListener(marker, 'mouseover', function(event) {
         element.addClass('highlighted');
