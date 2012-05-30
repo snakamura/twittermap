@@ -189,7 +189,9 @@ Tweet.formatDate = function(date, now) {
     if (!now)
         now = new Date();
     var diff = (now.getTime() - date.getTime())/1000;
-    if (diff < 60)
+    if (diff < 1)
+        return 'now';
+    else if (diff < 60)
         return Math.floor(diff) + 's';
     else if (diff < 60*60)
         return Math.floor(diff/60) + 'm';
