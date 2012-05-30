@@ -267,7 +267,8 @@ Updater.prototype.update = function() {
 
 Updater.prototype.insertTweets = function() {
     var since = new Date(new Date().getTime() - 24*60*60*1000);
-    var position = this.map.getCenter();
+    var center = this.map.getCenter();
+    var position = new google.maps.LatLng(center.lat(), center.lng());
     var queue = this.queue;
     $.getJSON('http://search.twitter.com/search.json?q=since:' + Updater.formatUTCDate(since) + '&geocode=' + position.toUrlValue() + ',1km&rpp=100&include_entities=t&result_type=recent&callback=?', function(response) {
         if (response.error) {
