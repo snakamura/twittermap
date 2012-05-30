@@ -9,6 +9,7 @@ div#sidebar {
 	float: right;
 	width: 320px;
 	height: 100%;
+	overflow-x: hidden;
 	overflow-y: scroll;
 }
 
@@ -39,6 +40,10 @@ div#tweets div.tweet:hover {
 
 div#tweets div.tweet.highlighted {
 	background: #eee;
+}
+
+div.tweet div.tweet_container {
+	overflow: hidden;
 }
 
 div.tweet img.profile {
