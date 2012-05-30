@@ -22,6 +22,9 @@ Tweets.prototype.insertTweet = function(tweet, position) {
     if (this.hasTweet(tweet))
         return false;
 
+    if (!this.map.getBounds().contains(position))
+        return false;
+
     var icon = new google.maps.MarkerImage(tweet.profile_image_url,
                                            new google.maps.Size(48, 48));
     var shadow = new google.maps.MarkerImage('shadow.png',
