@@ -206,7 +206,7 @@ var Updater = function(map, queue) {
     this.lastUpdated = new Date(new Date().getTime() - Updater.INTERVAL);
 };
 
-Updater.INTERVAL = 10;
+Updater.INTERVAL = 10*1000;
 
 Updater.prototype.update = function() {
     if (!this.timer) {
@@ -221,7 +221,7 @@ Updater.prototype.update = function() {
                 this.timer = null;
                 this.insertTweets();
                 this.lastUpdated = new Date();
-            }, this), (Updater.INTERVAL - diff)*1000);
+            }, this), Updater.INTERVAL - diff);
         }
     }
 };
