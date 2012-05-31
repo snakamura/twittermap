@@ -430,8 +430,10 @@ $(function() {
     };
     $('#go').click(go);
     $('#loc').keydown(function(event) {
-        if (event.keyCode == 13)
+        if (event.keyCode == 13) {
             go();
+            event.target.blur();
+        }
     });
 
     $('#home').change(function() {
