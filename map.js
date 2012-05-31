@@ -160,22 +160,24 @@ Tweet.prototype.format = function() {
     var HASHTAG = 2;
     var MEDIA = 3;
 
+    var entities = [];
     var types = [{ type: URL,          entities: this.entities.urls          },
                  { type: USER_MENTION, entities: this.entities.user_mentions },
                  { type: HASHTAG,      entities: this.entities.hashtags      },
                  { type: MEDIA,        entities: this.entities.media         }];
-    var entities = [];
-    $.each(types, function(n, t) {
-        if (t.entities) {
-            $.each(t.entities, function(n, e) {
-                e.type = t.type;
-            });
-            entities = entities.concat(t.entities);
-        }
-    });
-    entities.sort(function(e1, e2) {
-        return e1.indices[0] - e2.indices[0];
-    });
+    if (this.entities) {
+        $.each(types, function(n, t) {
+            if (t.entities) {
+                $.each(t.entities, function(n, e) {
+                    e.type = t.type;
+                });
+                entities = entities.concat(t.entities);
+            }
+        });
+        entities.sort(function(e1, e2) {
+            return e1.indices[0] - e2.indices[0];
+        });
+    }
 
     var formatted = '';
     var text = this.text;
