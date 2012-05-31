@@ -337,6 +337,59 @@ Updater.formatUTCDate = function(date) {
 };
 
 
+var Location = function(map) {
+    this.map = map;
+    this.watchId = null;
+};
+
+Location.prototype.isTracking = function() {
+    return this.watchId != null;
+};
+
+Location.prototype.startTracking = function() {
+    if (this.watchId != null)
+        return;
+
+    this.watchId = navigator.geolocation.watchPosition($.proxy(function(position) {
+        this.map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+    }, this));
+
+    if (this.trackingChanged)
+        this.trackingChanged();
+};
+
+Location.prototype.stopTracking = function() {
+    if (this.watchId == null)
+        return;
+
+    navigator.geolocation.clearWatch(this.watchId);
+    this.watchId = null;
+
+    if (this.trackingChanged)
+        this.trackingChanged();
+};
+
+Location.prototype.go = function(location) {
+    if (location.length == 0)
+        return;
+
+    this.stopTracking();
+
+    var geocoder = new google.maps.Geocoder();
+    var request = {
+        address: location
+    };
+    geocoder.geocode(request, $.proxy(function(result, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            this.map.setCenter(result[0].geometry.location);
+        }
+        else {
+            alert('Cannot find: ' + location);
+        }
+    }, this));
+};
+
+
 var INSERT_INTERVAL = 1*1000;
 var UPDATE_INTERVAL = 60*1000;
 var UPDATE_CREATED_INTERVAL = 60*1000;
@@ -344,15 +397,11 @@ var UPDATE_DELAY = 1*1000;
 
 $(function() {
     var options = {
-        center: new google.maps.LatLng(35.607103, 139.734893),
+        center: new google.maps.LatLng(35.682085, 139.766221),
         zoom: 14,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     var map = new google.maps.Map($('#map')[0], options);
-
-    navigator.geolocation.getCurrentPosition(function(position) {
-        map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-    });
 
     var queue = new Queue();
     var updater = new Updater(map, queue);
@@ -372,24 +421,12 @@ $(function() {
     }, UPDATE_INTERVAL)
 
     $('button').button();
+    $('input:checkbox').button();
+
+    var location = new Location(map);
 
     var go = function() {
-        var location = $('#loc').val();
-        if (location.length == 0)
-            return;
-
-        var geocoder = new google.maps.Geocoder();
-        var request = {
-            address: location
-        };
-        geocoder.geocode(request, function(result, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                map.setCenter(result[0].geometry.location);
-            }
-            else {
-                alert('Cannot find: ' + location);
-            }
-        });
+        location.go($('#loc').val());
     };
     $('#go').click(go);
     $('#loc').keydown(function(event) {
@@ -397,11 +434,15 @@ $(function() {
             go();
     });
 
-    $('#home').click(function() {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-        });
+    $('#home').change(function() {
+        if (!location.isTracking())
+            location.startTracking();
+        else
+            location.stopTracking();
     });
+    location.trackingChanged = function() {
+        $('#home').prop('checked', location.isTracking()).button('refresh');
+    };
 
     var tweets = new Tweets(map);
 
