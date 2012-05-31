@@ -345,7 +345,7 @@ var UPDATE_DELAY = 1*1000;
 $(function() {
     var options = {
         center: new google.maps.LatLng(35.607103, 139.734893),
-        zoom: 16,
+        zoom: 14,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     var map = new google.maps.Map($('#map')[0], options);
@@ -370,6 +370,38 @@ $(function() {
     setInterval(function() {
         updater.update();
     }, UPDATE_INTERVAL)
+
+    $('button').button();
+
+    var go = function() {
+        var location = $('#loc').val();
+        if (location.length == 0)
+            return;
+
+        var geocoder = new google.maps.Geocoder();
+        var request = {
+            address: location
+        };
+        geocoder.geocode(request, function(result, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                map.setCenter(result[0].geometry.location);
+            }
+            else {
+                alert('Cannot find: ' + location);
+            }
+        });
+    };
+    $('#go').click(go);
+    $('#loc').keydown(function(event) {
+        if (event.keyCode == 13)
+            go();
+    });
+
+    $('#home').click(function() {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+        });
+    });
 
     var tweets = new Tweets(map);
 

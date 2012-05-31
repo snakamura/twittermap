@@ -3,6 +3,7 @@
 <head>
 	<title>Map</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/base/jquery-ui.css">
 	<link rel="stylesheet" href="map.css">
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
@@ -13,7 +14,16 @@
 </head>
 <body>
 	<div id="sidebar">
-		<div id="sidebar_container">
+		<div id="location">
+			<table>
+				<tr>
+					<td><input id="loc" type="text" placeholder="Location..."></input></td>
+					<td><button id="go">Go</button></td>
+					<td><button id="home">!</button></td>
+				</tr>
+			</table>
+		</div>
+		<div id="tweets_container">
 			<div id="tweets"></div>
 		</div>
 	</div>

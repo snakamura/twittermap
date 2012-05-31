@@ -2,6 +2,7 @@ html, body {
 	height: 100%;
 	margin: 0;
 	padding: 0;
+	font-family: Hiragino, Meiryo, Lucida Grande, Helvetica;
 }
 
 div#sidebar {
@@ -11,9 +12,43 @@ div#sidebar {
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: scroll;
+	background: white;
 }
 
-div#sidebar_container {
+div#location {
+	position: fixed;
+	background: url(location.png);
+	padding: 5px 5px;
+	width: 320px;
+	border-bottom: 1px solid #ddd;
+	font-size: 62.5%;
+	z-index: 100;
+}
+
+div#location table {
+	width: 310px;
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+div#location table tr td {
+	white-space: nowrap;
+}
+
+div#location table tr td:first-child {
+	width: 100%;
+}
+
+div#location input[type='text'] {
+	width: 100%;
+	border: 1px solid lightgray;
+	font-size: 1.3em;
+	border-radius: 5px;
+}
+
+div#tweets_container {
+	margin: 45px 0 0 0;
 	padding: 10px;
 }
 
