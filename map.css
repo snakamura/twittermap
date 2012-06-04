@@ -17,19 +17,19 @@ div#sidebar {
 
 div#location {
 	position: fixed;
-	background: url(location.png);
-	padding: 5px 5px;
 	width: 320px;
-	border-bottom: 1px solid #ddd;
 	font-size: 62.5%;
 	z-index: 100;
+	background: url(edge.png) repeat-x left bottom;
+	padding: 0 0 10px 0;
 }
 
 div#location table {
-	width: 310px;
+	background: white;
+	width: 320px;
 	border: none;
 	margin: 0;
-	padding: 0;
+	padding: 10px 5px 0 5px;
 }
 
 div#location table tr td {
