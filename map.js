@@ -124,7 +124,7 @@ Tweet.prototype.createElement = function() {
                  t.find('a.user').text(this.from_user)];
     $.each(links, $.proxy(function(n, l) {
         l.attr('href', 'http://twitter.com/#!' + this.from_user).attr('target', '_blank');
-    },this));
+    }, this));
     t.find('div.text').html(this.format());
     if (this.entities.media) {
         $.each(this.entities.media, function(n, media) {
