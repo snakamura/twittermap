@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>Map</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css">
+	<link rel="stylesheet" href="mobile.css">
+	<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDP3mgHOUJnwiXpBdhbpqoE76EzsBOFApo&sensor=false"></script>
+	<script type="text/javascript" src="mobile.js"></script>
+	<style type="text/css">
+	</style>
+</head>
+<body>
+	<div id="page-map" data-role="page" data-title="Map">
+		<div data-role="header">
+			<h1>Map</h1>
+		</div>
+		<div data-role="content">
+			<div id="map"></div>
+		</div>
+		<div data-role="footer" data-position="fixed" data-id="footer">
+			<div data-role="navbar">
+				<ul>
+					<li><a href="#page-map" class="ui-btn-active ui-state-persit">Map</a></li>
+					<li><a href="#page-tweets">Tweets</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div id="page-tweets" data-role="page" data-title="Tweets">
+		<div data-role="header">
+			<h1>Tweets</h1>
+		</div>
+		<div data-role="content">
+			<ul id="tweets" data-role="listview">
+				<li>Tweet 1</li>
+				<li>Tweet 2</li>
+			</ul>
+		</div>
+		<div data-role="footer" data-position="fixed" data-id="footer">
+			<div data-role="navbar">
+				<ul>
+					<li><a href="#page-map">Map</a></li>
+					<li><a href="#page-tweets" class="ui-btn-active ui-state-persit">Tweets</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
