@@ -38,6 +38,10 @@ div.tweet img.thumb {
 	box-shadow: 1px 1px 3px black;
 }
 
+div.tweet div.text {
+	font-weight: normal;
+}
+
 div.tweet a {
 	text-decoration: none;
 	color: blue;
