@@ -21,14 +21,14 @@ $(document).delegate('#page-map', 'pagecreate', function() {
         adjustMapHeight();
     });
     $('#button_map').click(function() {
+        $('#tweets').hide();
         $(document).scrollTop(0);
         adjustMapHeight();
         $('#map').show();
-        $('#tweets').hide();
     });
     $('#button_tweets').click(function() {
-        $('#tweets').show();
         $('#map').hide();
+        $('#tweets').show();
     });
 
     var options = {
