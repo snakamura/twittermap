@@ -15,35 +15,19 @@
 	</style>
 </head>
 <body>
-	<div id="page-map" data-role="page" data-title="Map">
+	<div id="page-map" data-role="page">
 		<div data-role="header" data-position="fixed">
 			<h1>Map</h1>
 		</div>
 		<div data-role="content">
 			<div id="map"></div>
+			<ul id="tweets" data-role="listview" style="display:none"></ul>
 		</div>
-		<div data-role="footer" data-position="fixed" data-id="footer">
+		<div data-role="footer" data-position="fixed">
 			<div data-role="navbar">
 				<ul>
-					<li><a href="#page-map" class="ui-btn-active ui-state-persit">Map</a></li>
-					<li><a href="#page-tweets">Tweets</a></li>
-				</ul>
-			</div>
-		</div>
-	</div>
-	<div id="page-tweets" data-role="page" data-title="Tweets">
-		<div data-role="header" data-position="fixed">
-			<h1>Tweets</h1>
-		</div>
-		<div data-role="content">
-			<ul id="tweets" data-role="listview">
-			</ul>
-		</div>
-		<div data-role="footer" data-position="fixed" data-id="footer">
-			<div data-role="navbar">
-				<ul>
-					<li><a href="#page-map">Map</a></li>
-					<li><a href="#page-tweets" class="ui-btn-active ui-state-persit">Tweets</a></li>
+					<li><a id="button_map" href="#" class="ui-btn-active">Map</a></li>
+					<li><a id="button_tweets" href="#">Tweets</a></li>
 				</ul>
 			</div>
 		</div>

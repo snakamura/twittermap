@@ -3,10 +3,21 @@ var UPDATE_INTERVAL = 60*1000;
 var UPDATE_CREATED_INTERVAL = 60*1000;
 var UPDATE_DELAY = 1*1000;
 
-$(document).delegate('#page-map', 'pagecreate', function() {
+$(document).delegate('#page-map', 'pageshow', function() {
     var height = $(window).height() - ($(this).find('[data-role="header"]').height() +
                                        $(this).find('[data-role="footer"]').height());
     $('#map').height(height);
+});
+
+$(document).delegate('#page-map', 'pagecreate', function() {
+    $('#button_map').click(function() {
+        $('#map').show();
+        $('#tweets').hide();
+    });
+    $('#button_tweets').click(function() {
+        $('#tweets').show();
+        $('#map').hide();
+    });
 
     var options = {
         center: new google.maps.LatLng(35.682085, 139.766221),
@@ -35,7 +46,6 @@ $(document).delegate('#page-map', 'pagecreate', function() {
     var tweets = new Tweets(map);
     $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
         var element = tweet.createElement();
-//        var element = $('<li>' + tweet.text + '</li>');
 /*
         element.mouseenter(function(event) {
             marker.setAnimation(google.maps.Animation.BOUNCE);
