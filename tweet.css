@@ -1,0 +1,48 @@
+div.tweet div.tweet_container {
+	overflow: hidden;
+}
+
+div.tweet img.profile {
+	float: left;
+	width: 48px;
+	height: 48px;
+	margin: 0 5px 5px 0;
+	border-radius: 5px;
+}
+
+div.tweet div.created {
+	float: right;
+	font-size: 80%;
+	color: gray;
+	padding: 0.2em 0 0 5px;
+}
+
+div.tweet a.username {
+	font-weight: bold;
+	color: black;
+}
+
+div.tweet a.user {
+	font-size: 80%;
+	color: gray;
+}
+
+div.tweet a.user:before {
+	content: '@';
+}
+
+div.tweet img.thumb {
+	display: block;
+	clear: both;
+	margin: 5px auto 0 auto;
+	box-shadow: 1px 1px 3px black;
+}
+
+div.tweet a {
+	text-decoration: none;
+	color: blue;
+}
+
+div.tweet a:hover {
+	text-decoration: underline;
+}
