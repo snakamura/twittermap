@@ -4,8 +4,11 @@ var UPDATE_CREATED_INTERVAL = 60*1000;
 var UPDATE_DELAY = 1*1000;
 
 function adjustMapHeight() {
-    var height = $(window).height() - ($(this).find('[data-role="header"]').height() +
-                                       $(this).find('[data-role="footer"]').height());
+    console.log($(window).height());
+    console.log($(document).find('[data-role="header"]').height());
+    console.log($(document).find('[data-role="footer"]').height());
+    var height = $(window).height() - ($(document).find('[data-role="header"]').height() +
+                                       $(document).find('[data-role="footer"]').height());
     $('#map').height(height);
 };
 
