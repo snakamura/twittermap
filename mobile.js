@@ -3,14 +3,19 @@ var UPDATE_INTERVAL = 60*1000;
 var UPDATE_CREATED_INTERVAL = 60*1000;
 var UPDATE_DELAY = 1*1000;
 
-$(document).delegate('#page-map', 'pageshow', function() {
+function adjustMapHeight() {
     var height = $(window).height() - ($(this).find('[data-role="header"]').height() +
                                        $(this).find('[data-role="footer"]').height());
     $('#map').height(height);
+};
+
+$(document).delegate('#page-map', 'pageshow', function() {
+    adjustMapHeight();
 });
 
 $(document).delegate('#page-map', 'pagecreate', function() {
     $('#button_map').click(function() {
+        adjustMapHeight();
         $('#map').show();
         $('#tweets').hide();
     });
