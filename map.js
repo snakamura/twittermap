@@ -39,48 +39,13 @@ Tweets.prototype.insertTweet = function(tweet, position) {
         shadow: shadow
     });
 
-    var element = tweet.createElement();
-    element.mouseenter(function(event) {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-    });
-    element.mouseleave(function(event) {
-        marker.setAnimation(null);
-    });
-    element.click($.proxy(function(event) {
-        var position = marker.getPosition();
-        if (!this.map.getBounds().contains(position))
-            this.map.setCenter(position);
-    }, this));
+    $(this).trigger('tweet_added', [tweet, this.map, marker]);
 
-    $('#tweets').prepend(element);
-
-    var sidebar = $('#sidebar');
-    var scrollTop = sidebar.scrollTop();
-    if (scrollTop == 0) {
-        element.hide();
-        element.show('blind', { mode: 'show' }, 'slow');
-    }
-    else {
-        sidebar.scrollTop(scrollTop + element.outerHeight(true) + 1);
-    }
-
-    google.maps.event.addListener(marker, 'mouseover', function(event) {
-        element.addClass('highlighted');
-    });
-    google.maps.event.addListener(marker, 'mouseout', function(event) {
-        element.removeClass('highlighted');
-    });
     google.maps.event.addListener(marker, 'click', $.proxy(function(event) {
         this.showTweet(tweet);
-
-        var sidebar = $('#sidebar');
-        sidebar.animate({
-            'scrollTop': (sidebar.scrollTop() + element.position().top - 20) + 'px'
-        }, 'fast');
     }, this));
 
     tweet.marker = marker;
-    tweet.element = element;
 
     this.tweets[tweet.id] = tweet;
     this.tweetIds.push(tweet.id);
@@ -95,8 +60,8 @@ Tweets.prototype.crop = function() {
         var id = this.tweetIds.shift();
         var tweet = this.tweets[id];
         tweet.marker.setMap(null);
-        tweet.element.remove();
         delete this.tweets[id];
+        $(this).trigger('tweet_removed', [tweet]);
     }
 }
 
@@ -119,7 +84,7 @@ var Tweet = function() {
 Tweet.prototype.createElement = function() {
     var t = $('<div class="tweet"><div class="tweet_container"><img class="profile"/><div class="created"/><div><a class="username"/> <a class="user"/></div><div class="text"/></div></div>');
     t.find('img.profile').attr('src', this.profile_image_url);
-    this.applyCreated(t);
+    this.updateCreated(t);
     var links = [t.find('a.username').text(this.from_user_name),
                  t.find('a.user').text(this.from_user)];
     $.each(links, $.proxy(function(n, l) {
@@ -140,11 +105,7 @@ Tweet.prototype.createElement = function() {
     return t;
 };
 
-Tweet.prototype.updateCreated = function(now) {
-    this.applyCreated(this.element, now);
-};
-
-Tweet.prototype.applyCreated = function(element, now) {
+Tweet.prototype.updateCreated = function(element, now) {
     element.find('div.created').text(Tweet.formatDate(new Date(this.created_at), now));
 };
 
@@ -447,6 +408,49 @@ $(function() {
     };
 
     var tweets = new Tweets(map);
+    $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
+        var element = tweet.createElement();
+        element.mouseenter(function(event) {
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+        });
+        element.mouseleave(function(event) {
+            marker.setAnimation(null);
+        });
+        element.click(function(event) {
+            var position = marker.getPosition();
+            if (!map.getBounds().contains(position))
+                map.setCenter(position);
+        });
+
+        $('#tweets').prepend(element);
+
+        var sidebar = $('#sidebar');
+        var scrollTop = sidebar.scrollTop();
+        if (scrollTop == 0) {
+            element.hide();
+            element.show('blind', { mode: 'show' }, 'slow');
+        }
+        else {
+            sidebar.scrollTop(scrollTop + element.outerHeight(true) + 1);
+        }
+
+        google.maps.event.addListener(marker, 'mouseover', function(event) {
+            element.addClass('highlighted');
+        });
+        google.maps.event.addListener(marker, 'mouseout', function(event) {
+            element.removeClass('highlighted');
+        });
+        google.maps.event.addListener(marker, 'click', function(event) {
+            sidebar.animate({
+                'scrollTop': (sidebar.scrollTop() + element.position().top - 20) + 'px'
+            }, 'fast');
+        });
+
+        tweet.element = element;
+    });
+    $(tweets).bind('tweet_removed', function(event, tweet) {
+        tweet.element.remove();
+    });
 
     setInterval(function() {
         while (true) {
@@ -459,7 +463,7 @@ $(function() {
     setInterval(function() {
         var now = new Date();
         tweets.each(function(tweet) {
-            tweet.updateCreated(now);
+            tweet.updateCreated(tweet.element, now);
         });
     }, UPDATE_CREATED_INTERVAL);
 });
