@@ -14,6 +14,9 @@ $(document).delegate('#page-map', 'pageshow', function() {
 });
 
 $(document).delegate('#page-map', 'pagecreate', function() {
+    $(window).resize(function() {
+        adjustMapHeight();
+    });
     $('#button_map').click(function() {
         adjustMapHeight();
         $('#map').show();
