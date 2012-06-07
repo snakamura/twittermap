@@ -1,3 +1,9 @@
 div#map {
 	margin: -15px;
 }
+
+div.ui-header div.ui-slider {
+	position: absolute;
+	right: 0;
+	top: 4px;
+}

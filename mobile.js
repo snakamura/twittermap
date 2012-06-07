@@ -4,9 +4,6 @@ var UPDATE_CREATED_INTERVAL = 60*1000;
 var UPDATE_DELAY = 1*1000;
 
 function adjustMapHeight() {
-    console.log(window.innerHeight);
-    console.log($(document).find('[data-role="header"]').height());
-    console.log($(document).find('[data-role="footer"]').height());
     var height = window.innerHeight - ($(document).find('[data-role="header"]').height() +
                                        $(document).find('[data-role="footer"]').height());
     $('#map').height(height);
@@ -21,19 +18,19 @@ $(document).delegate('#page-map', 'pagecreate', function() {
         adjustMapHeight();
     });
     $('#button_map').click(function() {
+        $('#map').show();
         $('#tweets').hide();
         $(document).scrollTop(0);
         adjustMapHeight();
-        $('#map').show();
     });
     $('#button_tweets').click(function() {
-        $('#map').hide();
         $('#tweets').show();
+        $('#map').hide();
     });
 
     var options = {
         center: new google.maps.LatLng(35.682085, 139.766221),
-        zoom: 12,
+        zoom: 14,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     var map = new google.maps.Map($('#map')[0], options);
@@ -55,6 +52,18 @@ $(document).delegate('#page-map', 'pagecreate', function() {
         updater.update();
     }, UPDATE_INTERVAL)
 
+    var location = new Location(map);
+    $('#home').change(function() {
+        if (!location.isTracking())
+            location.startTracking();
+        else
+            location.stopTracking();
+    });
+/*
+    location.trackingChanged = function() {
+        $('#home').prop('checked', location.isTracking()).slider('refresh');
+    };
+*/
     var tweets = new Tweets(map);
     $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
         var element = tweet.createElement();
