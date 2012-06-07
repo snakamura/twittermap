@@ -50,12 +50,12 @@ $(function() {
         else
             location.stopTracking();
     });
-    $(location).bind('tracking_changed', function() {
+    $(location).on('tracking_changed', function() {
         $('#home').prop('checked', location.isTracking()).button('refresh');
     });
 
     var tweets = new Tweets(map);
-    $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
+    $(tweets).on('tweet_added', function(event, tweet, map, marker) {
         var element = tweet.createElement();
         element.mouseenter(function(event) {
             marker.setAnimation(google.maps.Animation.BOUNCE);
@@ -95,7 +95,7 @@ $(function() {
 
         tweet.element = element;
     });
-    $(tweets).bind('tweet_removed', function(event, tweet) {
+    $(tweets).on('tweet_removed', function(event, tweet) {
         tweet.element.remove();
     });
 

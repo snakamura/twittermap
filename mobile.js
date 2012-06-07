@@ -9,11 +9,11 @@ function adjustMapHeight() {
     $('#map').height(height);
 };
 
-$(document).delegate('#page-map', 'pageshow', function() {
+$(document).on('pageshow', '#page-map', function() {
     adjustMapHeight();
 });
 
-$(document).delegate('#page-map', 'pagecreate', function() {
+$(document).on('pagecreate', '#page-map', function() {
     $(window).resize(function() {
         adjustMapHeight();
     });
@@ -57,7 +57,7 @@ $(document).delegate('#page-map', 'pagecreate', function() {
     var go = function() {
         location.go($('#loc').val());
     };
-    $('#loc').live('keydown', function(event) {
+    $(document).on('keydown', '#loc', function(event) {
         if (event.keyCode == 13) {
             go();
             event.target.blur();
@@ -70,19 +70,19 @@ $(document).delegate('#page-map', 'pagecreate', function() {
         else
             location.stopTracking();
     });
-    $(location).bind('tracking_changed', function() {
+    $(location).on('tracking_changed', function() {
         $('#home').val(location.isTracking() ? 1 : 0).slider('refresh');
     });
 
     var tweets = new Tweets(map);
-    $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
+    $(tweets).on('tweet_added', function(event, tweet, map, marker) {
         var element = tweet.createElement();
         $('#tweets').prepend(element);
         element.wrap('<li />');
         $('#tweets').listview('refresh');
         tweet.element = element;
     });
-    $(tweets).bind('tweet_removed', function(event, tweet) {
+    $(tweets).on('tweet_removed', function(event, tweet) {
         tweet.element.remove();
     });
 
