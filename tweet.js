@@ -315,8 +315,7 @@ Location.prototype.startTracking = function() {
         this.map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
     }, this));
 
-    if (this.trackingChanged)
-        this.trackingChanged();
+    $(this).trigger('tracking_changed');
 };
 
 Location.prototype.stopTracking = function() {
@@ -326,8 +325,7 @@ Location.prototype.stopTracking = function() {
     navigator.geolocation.clearWatch(this.watchId);
     this.watchId = null;
 
-    if (this.trackingChanged)
-        this.trackingChanged();
+    $(this).trigger('tracking_changed');
 };
 
 Location.prototype.go = function(location) {

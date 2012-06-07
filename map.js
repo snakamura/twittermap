@@ -50,9 +50,9 @@ $(function() {
         else
             location.stopTracking();
     });
-    location.trackingChanged = function() {
+    $(location).bind('tracking_changed', function() {
         $('#home').prop('checked', location.isTracking()).button('refresh');
-    };
+    });
 
     var tweets = new Tweets(map);
     $(tweets).bind('tweet_added', function(event, tweet, map, marker) {

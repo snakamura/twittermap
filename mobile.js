@@ -60,9 +60,9 @@ $(document).delegate('#page-map', 'pagecreate', function() {
             location.stopTracking();
     });
 /*
-    location.trackingChanged = function() {
-        $('#home').prop('checked', location.isTracking()).slider('refresh');
-    };
+    $(location).bind('tracking_changed', function() {
+        $('#home').prop('checked', location.isTracking()).button('refresh');
+    });
 */
     var tweets = new Tweets(map);
     $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
