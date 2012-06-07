@@ -53,59 +53,33 @@ $(document).delegate('#page-map', 'pagecreate', function() {
     }, UPDATE_INTERVAL)
 
     var location = new Location(map);
+
+    var go = function() {
+        location.go($('#loc').val());
+    };
+    $('#loc').live('keydown', function(event) {
+        if (event.keyCode == 13) {
+            go();
+            event.target.blur();
+        }
+    });
+
     $('#home').change(function() {
         if (!location.isTracking())
             location.startTracking();
         else
             location.stopTracking();
     });
-/*
     $(location).bind('tracking_changed', function() {
-        $('#home').prop('checked', location.isTracking()).button('refresh');
+        $('#home').val(location.isTracking() ? 1 : 0).slider('refresh');
     });
-*/
+
     var tweets = new Tweets(map);
     $(tweets).bind('tweet_added', function(event, tweet, map, marker) {
         var element = tweet.createElement();
-/*
-        element.mouseenter(function(event) {
-            marker.setAnimation(google.maps.Animation.BOUNCE);
-        });
-        element.mouseleave(function(event) {
-            marker.setAnimation(null);
-        });
-        element.click(function(event) {
-            var position = marker.getPosition();
-            if (!map.getBounds().contains(position))
-                map.setCenter(position);
-        });
-*/
         $('#tweets').prepend(element);
         element.wrap('<li />');
         $('#tweets').listview('refresh');
-/*
-        var sidebar = $('#sidebar');
-        var scrollTop = sidebar.scrollTop();
-        if (scrollTop == 0) {
-            element.hide();
-            element.show('blind', { mode: 'show' }, 'slow');
-        }
-        else {
-            sidebar.scrollTop(scrollTop + element.outerHeight(true) + 1);
-        }
-
-        google.maps.event.addListener(marker, 'mouseover', function(event) {
-            element.addClass('highlighted');
-        });
-        google.maps.event.addListener(marker, 'mouseout', function(event) {
-            element.removeClass('highlighted');
-        });
-        google.maps.event.addListener(marker, 'click', function(event) {
-            sidebar.animate({
-                'scrollTop': (sidebar.scrollTop() + element.position().top - 20) + 'px'
-            }, 'fast');
-        });
-*/
         tweet.element = element;
     });
     $(tweets).bind('tweet_removed', function(event, tweet) {

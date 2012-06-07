@@ -7,3 +7,7 @@ div.ui-header div.ui-slider {
 	right: 0;
 	top: 4px;
 }
+
+div.ui-header div.ui-input-search {
+	margin-right: 110px;
+}
