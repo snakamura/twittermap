@@ -2,8 +2,17 @@
 <html>
 <head>
 <script type="text/javascript">
-var url = screen.width <= 480 ? 'mobile.html' : 'map.html';
-document.location.href = url;
+var mobile = false;
+var ua = navigator.userAgent;
+if (ua.match(/android/i)) {
+	if (ua.match(/mobile/i)) {
+		mobile = true;
+	}
+}
+else if (ua.match(/iphone/i)) {
+	mobile = true;
+}
+document.location.href = mobile ? 'mobile.html' : 'map.html';
 </script>
 </head>
 </html>
